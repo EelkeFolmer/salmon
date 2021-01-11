@@ -1,0 +1,103 @@
+---
+title: "Salmon data overview"
+author: "Eelke Folmer"
+header-includes:
+- \pagenumbering{gobble}
+output:
+  html_document:
+    toc: true
+    number_sections: true
+    keep_tex: true
+    keep_md: true
+graphics: yes
+figure_caption: yes
+fontsize: 11pt
+geometry: margin=1in
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(knitr)
+source('scripts/func_salmon.R')
+source('scripts/EThemes.R')
+
+opts_knit$set(progress = TRUE, 
+              verbose = TRUE, 
+              width = 200, 
+              cache=TRUE)
+
+opts_chunk$set(fig.width  = 12, 
+               fig.asp    = 1,
+               fig.path   = 'figs/',
+               fig.align  = 'center',
+               dev        = 'png',
+               dpi        = 100)
+
+myfont <- "LM Roman 10"
+
+
+```
+
+```{r}
+layers <- st_layers("~/work/projects/salmon/data/salmon_labels.gpkg")[c(1,4)] %>%
+  data.frame()
+
+layers
+```
+
+```{r}
+
+path   <- "/media/eelke/Samsung_T5/salmon/GIS/"
+# fnames <- list.files(path, pattern="tif", full.names=FALSE)
+# layers <- str_split(fnames, '.tif', simplify=TRUE)[,1]
+
+#ggRGB(ortho, maxpixels=100, r=1, g=2, b=3) + scale_x_continuous(expand = c(0,0)) + scale_y_continuous(expand = c(0,0)) + geom_sf(data=salmon_sf)
+
+layers <- st_layers("~/work/projects/salmon/data/salmon_labels.gpkg")[c(1,4)] %>%
+   data.frame() 
+
+for (i in 1:dim(layers)[1]) {  
+
+  layer <- layers[i,1]
+  ortho <- brick(paste0(path, layer, '.tif') )
+  
+  salmon <- st_read("~/work/projects/salmon/data/salmon_labels.gpkg", layer = layer) %>%
+    st_transform(crs(ortho))
+  
+  grid <- st_make_grid(ortho, cellsize=5) %>%
+    st_as_sf(agr="constant") %>%
+    mutate(intersect_salmon = apply(st_intersects(., salmon, sparse = FALSE), 1, any)) %>%
+    filter(intersect_salmon) 
+  
+  for (j in 1:dim(grid)[1]) {
+    or <- crop(ortho, grid[j, ])
+    s  <- st_crop(salmon, grid[j,]) # st_bbox(salmon1)+c(-1,-1,1,1)
+  
+    p  <- ggRGB(or,r=1, g=2, b=3, stretch = "lin", quantiles = c(0.02, 0.98)) + geom_sf(data=s, col='black', fill="red", shape=21, size=2) + # limits = matrix(c(0,255,0,255,0,255), ncol=2, by=TRUE)
+           ETheme(10) + scale_x_continuous(expand = c(0,0)) + scale_y_continuous(expand = c(0,0))
+  
+    ggsave(paste0('/media/eelke/Samsung_T5/salmon/pos_lab/', layer, '_',  j, '.png'), p, width=4, height=4)
+  }
+}
+
+# pl[[layer]] <- p
+# p <- do.call(grid.arrange, c(pl, nrow=3))
+# ggsave('salmon_grid2.png', p, width=8, height=8)
+
+
+# o1 <- ggRGB(ortho_Holwerd, maxpixels=mpix, ext=e1, r=1, g=2, b=3) + ETheme(12) + scale_x_continuous(expand = c(0,0)) + scale_y_continuous(expand = c(0,0)) ext=e1,
+
+# x = read_stars(fnames[1])
+# 
+# dim(x[[1]])
+# 
+# plot(x, rgb=rgb, axes=TRUE)
+# 
+# #r = st_rgb(x, dimension=3, use_alpha=FALSE) # now R=6,G=5,B=4,alpha=3
+# r = st_rgb(x, dimension=3, use_alpha=FALSE) # now R=6,G=5,B=4,alpha=3  x[,,,c(1,2,3,4)]
+
+  
+  
+```
+
