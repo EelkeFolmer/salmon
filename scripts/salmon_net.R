@@ -2,9 +2,9 @@
   
   device <- if (cuda_is_available()) torch_device("cuda:0") else "cpu"
   
-  train_ds <- image_folder_dataset(root="/media/eelke/Samsung_T5/salmon/data/train/", transform = train_transforms)
-  valid_ds <- image_folder_dataset(root="/media/eelke/Samsung_T5/salmon/data/valid/", transform = valid_transforms)
-  test_ds  <- image_folder_dataset(root="/media/eelke/Samsung_T5/salmon/data/test/",  transform = valid_transforms)
+  train_ds <- image_folder_dataset(root="data/train/", transform = train_transforms)
+  valid_ds <- image_folder_dataset(root="data/valid/", transform = valid_transforms)
+  test_ds  <- image_folder_dataset(root="data/test/",  transform = valid_transforms)
   
   train_ds$.length()
   valid_ds$.length()
