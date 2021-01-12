@@ -1,4 +1,4 @@
-  source('scripts/func_salmon.R')
+#  source('scripts/func_salmon.R')
   
   device <- if (cuda_is_available()) torch_device("cuda:0") else "cpu"
   
