@@ -32,7 +32,7 @@ model        <- model$to(device = device)
 criterion    <- nn_cross_entropy_loss()
 optimizer    <- optim_sgd(model$parameters, lr = 0.05, momentum = 0.9)
 
-num_epochs = 2
+num_epochs = 10
 
 scheduler <- optimizer %>% 
   lr_one_cycle(max_lr = 0.01, epochs = num_epochs, steps_per_epoch = train_dl$.length())
@@ -74,18 +74,19 @@ for (epoch in 1:num_epochs) {
   
   cat(sprintf("\nLoss at epoch %d: training: %3f, validation: %3f\n", epoch, mean(train_losses), mean(valid_losses)))
 }
-torch_save(model, "model.pt")
-# flush gpu
 
-model_ <- torch_load("model.pt")
+# torch_save(model, "model.pt") # flush memory
+model <- torch_load("model10.pt")
+
 # testing
 model$eval()
+criterion <- nn_cross_entropy_loss()
 
 test_batch <- function(b) {
   
   output <- model(b[[1]])
   labels <- b[[2]]$to(device = device)
-  loss <- criterion(output, labels)
+  loss   <- criterion(output, labels)
   
   test_losses <<- c(test_losses, loss$item())
   # torch_max returns a list, with position 1 containing the values
@@ -106,3 +107,5 @@ for (b in enumerate(test_dl)) {
 }
 
 mean(test_losses)
+
+torch_save(model, "salmon_net.pt") # flush memory

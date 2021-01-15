@@ -9,7 +9,7 @@ library(magick)
 
 library(torch)
 library(torchvision)
-library(torchdatasets)
+#library(torchdatasets)
 library(pins)
 
 device <- if (cuda_is_available()) torch_device("cuda:0") else "cpu"
