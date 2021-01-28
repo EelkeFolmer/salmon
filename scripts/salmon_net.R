@@ -26,13 +26,12 @@ model <- model_resnet18(pretrained = TRUE)
 model$parameters %>% 
   purrr::walk(function(param) param$requires_grad_(FALSE))
 
-num_features <- model$fc$in_features
-model$fc     <- nn_linear(in_features = num_features, out_features = length(class_names))
+model$fc     <- nn_linear(in_features = model$fc$in_features, out_features = 2) # changing the last layer only (number of predict classes = 2)
 model        <- model$to(device = device)
 criterion    <- nn_cross_entropy_loss()
 optimizer    <- optim_sgd(model$parameters, lr = 0.05, momentum = 0.9)
 
-num_epochs = 10
+num_epochs = 2
 
 scheduler <- optimizer %>% 
   lr_one_cycle(max_lr = 0.01, epochs = num_epochs, steps_per_epoch = train_dl$.length())
