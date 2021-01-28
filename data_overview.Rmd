@@ -35,27 +35,49 @@ opts_chunk$set(fig.width  = 12,
                dpi        = 100)
 
 myfont <- "LM Roman 10"
-
-
 ```
 
+# labels - geopackage with names of orthos and points
+
 ```{r}
-layers <- st_layers("~/work/projects/salmon/data/salmon_labels.gpkg")[c(1,4)] %>%
+layers1 <- st_layers("~/work/projects/salmon/data/salmon_labels.gpkg")[c(1,4)] %>%
   data.frame()
 
-layers
+layers2 <- st_layers("~/work/projects/salmon/data/salmon_labels2.gpkg")[c(1,4)] %>%
+  data.frame() %>%
+  mutate(name = str_split(name, 's ', simplify = TRUE)[,2]) %>%
+  set_names(c('name', 'fts'))
+  
+lys <- left_join(layers1, layers2)
+
+
+nlabels <- sum(layers$features)
 ```
+
+# extract basic information from the orthomosaics
+
+```{r}
+gdal_setInstallation(search_path = "/usr/bin/")
+  
+path   <- "/media/eelke/Samsung_T5/salmon/GIS/"
+fnames <- list.files(path, pattern="tif", full.names=FALSE)
+
+resolutions <- lapply(fnames, function(x) gdalinfo(paste0(path, x))[75] ) %>%
+  do.call(rbind, .) %>%
+  substr(., 15, 20) %>%
+  as.numeric()
+
+summary(resolutions)
+```
+
+# select the 
 
 ```{r}
 
-path   <- "/media/eelke/Samsung_T5/salmon/GIS/"
-# fnames <- list.files(path, pattern="tif", full.names=FALSE)
 # layers <- str_split(fnames, '.tif', simplify=TRUE)[,1]
 
 #ggRGB(ortho, maxpixels=100, r=1, g=2, b=3) + scale_x_continuous(expand = c(0,0)) + scale_y_continuous(expand = c(0,0)) + geom_sf(data=salmon_sf)
 
-layers <- st_layers("~/work/projects/salmon/data/salmon_labels.gpkg")[c(1,4)] %>%
-   data.frame() 
 
 for (i in 1:dim(layers)[1]) {  
 
@@ -97,7 +119,6 @@ for (i in 1:dim(layers)[1]) {
 # #r = st_rgb(x, dimension=3, use_alpha=FALSE) # now R=6,G=5,B=4,alpha=3
 # r = st_rgb(x, dimension=3, use_alpha=FALSE) # now R=6,G=5,B=4,alpha=3  x[,,,c(1,2,3,4)]
 
-  
   
 ```
 
