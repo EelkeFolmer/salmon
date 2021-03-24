@@ -40,18 +40,18 @@ myfont <- "LM Roman 10"
 # labels - geopackage with names of orthos and points
 
 ```{r}
-layers1 <- st_layers("~/work/projects/salmon/data/salmon_labels.gpkg")[c(1,4)] %>%
-  data.frame()
+# layers1 <- st_layers("~/work/projects/salmon/data/salmon_labels.gpkg")[c(1,4)] %>%
+#   data.frame()
+# 
+# layers2 <- st_layers("~/work/projects/salmon/data/salmon_labels2.gpkg")[c(1,4)] %>%
+#   data.frame() %>%
+#   mutate(name = str_split(name, 's ', simplify = TRUE)[,2]) %>%
+#   set_names(c('name', 'fts'))
+#   
+# lys <- left_join(layers1, layers2)
 
-layers2 <- st_layers("~/work/projects/salmon/data/salmon_labels2.gpkg")[c(1,4)] %>%
-  data.frame() %>%
-  mutate(name = str_split(name, 's ', simplify = TRUE)[,2]) %>%
-  set_names(c('name', 'fts'))
-  
-lys <- left_join(layers1, layers2)
-
-
-nlabels <- sum(layers$features)
+labels_st <- st_layers("~/work/projects/salmon/data/labels.gpkg")[c(1,4)] 
+nlabels <- sum(labels_st$features)
 ```
 
 # extract basic information from the orthomosaics
@@ -69,6 +69,23 @@ resolutions <- lapply(fnames, function(x) gdalinfo(paste0(path, x))[75] ) %>%
 
 summary(resolutions)
 ```
+
+
+```{r}
+path  <- "/media/eelke/Samsung_T5/salmon/data/consolidated/neg/"
+imgs0 <- list.files(path, pattern="jpg", full.names = FALSE)
+imgs  <- imgs0[!grepl('xml', imgs0)]
+
+i <- 70
+r <- readGDAL(fname = paste0(path, imgs[i]) ) %>% 
+  brick()
+bbox <- st_read("~/work/projects/salmon/data/labels_bbox.gpkg", layer=paste0(str_split(imgs[i], 'm_', simplify = TRUE)[,1], 'm')) 
+ggRGB(r, maxpixels=1000000, r=1, g=2, b=3) + scale_x_continuous(limits=extent(r)[1:2], expand = c(0,0)) + 
+  scale_y_continuous(limits=extent(r)[3:4], expand = c(0,0)) + geom_sf(data=bbox, fill=NA, col="blue")
+
+```
+
+
 
 # select the 
 

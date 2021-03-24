@@ -1,0 +1,102 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{python}
+import matplotlib.pyplot as plt
+import numpy as np
+from fastai import *
+from fastai.data.all import *
+from torchvision.models import *
+from fastai.vision.all import *
+from fastai.vision.core import *
+```
+
+```{python, eval=TRUE}
+t = np.arange(0.0, 2.0, 0.01)
+s = 1 + np.sin(2*np.pi*t)
+plt.plot(t, s)
+plt.grid(True)
+plt.show()
+```
+
+
+```{python, fig.width=15}
+path = Path('./data')
+imgs, lbl_bbox = get_annotations('./train.json')
+img2bbox = dict(zip(imgs, lbl_bbox))
+first = {k: img2bbox[k] for k in list(img2bbox)[1:2]}; first
+```
+
+```{python, fig.width=15}
+
+idx=1
+fn,bbox = path/'train'/imgs[idx],lbl_bbox[idx]; fn
+tbbox = LabeledBBox(TensorBBox(bbox[0]), bbox[1])
+
+img = PILImage.create(fn)
+my_img = img.show(figsize=(30,30))
+tbbox.show(ctx=my_img);
+plt.show()
+```
+
+
+```{python, fig.width=20}
+idx=2
+fn,bbox = path/'train'/imgs[idx],lbl_bbox[idx]; fn
+timg = Transform(PILImage.create)
+img = timg(fn)
+tbbox = LabeledBBox(TensorBBox(bbox[0]), bbox[1])
+ctx = img.show(figsize=(11,11))
+tbbox.show(ctx=ctx);
+plt.show()
+```
+
+```{python, fig.width=20}
+getters = [lambda o: path/'train'/o, lambda o: img2bbox[o][0], lambda o: img2bbox[o][1]]
+
+item_tfms = [Resize(512, method='pad'),]
+batch_tfms = [Rotate(), Flip(), Dihedral(), Normalize.from_stats(*imagenet_stats)]
+
+def get_train_imgs(noop):  return imgs
+
+salmon = DataBlock(blocks=(ImageBlock, BBoxBlock, BBoxLblBlock),
+                 splitter=RandomSplitter(),
+                 get_items=get_train_imgs,
+                 getters=getters,
+                 item_tfms=item_tfms,
+                 batch_tfms=batch_tfms,
+                 n_inp=1)
+                 
+dls = salmon.dataloaders(path/'train')
+dls.c = 1
+dls.show_batch(figsize=(30,30))
+plt.show()
+```
+
+```{python}
+from wwf.vision.object_detection import *
+encoder = create_body(resnet34, pretrained=True)
+get_c(dls)
+
+arch = RetinaNet(encoder, get_c(dls), final_bias=-4)
+create_head(124, 4)
+arch.smoothers
+arch.classifier
+arch.box_regressor
+
+ratios = [1/2,1,2]
+scales = [1,2**(-1/3), 2**(-2/3)]
+crit = RetinaNetFocalLoss(scales=scales, ratios=ratios)
+
+def _retinanet_split(m): return L(m.encoder,nn.Sequential(m.c5top6, m.p6top7, m.merges, m.smoothers, m.classifier, m.box_regressor)).map(params)
+
+learn = Learner(dls, arch, loss_func=crit, splitter=_retinanet_split)
+
+learn.freeze()
+```
+```{python}
+learn.fit_one_cycle(2, slice(1e-5, 1e-4))
+```
+

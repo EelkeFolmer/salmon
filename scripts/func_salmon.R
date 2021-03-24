@@ -45,7 +45,7 @@ func_imgprep <- function(layer=layer, size=10) {
     m        <- matrix(or[[1]])                  # to filter out images without variation
     is_black <- ifelse(sd(m) < 1, TRUE, FALSE)  
     p_valid  <- 1 - length(which(m == 255 ) ) / length(m) 
-    dim_ok   <- (dim(or)[1] > 224 & dim(or)[2] > 224 & dim(or)[3] == 4)
+    dim_ok   <- (dim(or)[2]/dim(or)[1]>0.95 & dim(or)[2] > 224 & dim(or)[3] == 4) # check if the x and y dimensions are roughly the same and big enough
     img_ok   <- (dim_ok & !is_black & p_valid > 0.7)
       
     if (has_salmon & dim_ok | img_ok) {
@@ -64,7 +64,7 @@ func_imgprep <- function(layer=layer, size=10) {
 
 # functions for ML
 
-copy_train_valid_test <- function(ptrain = 0.8, pvalid = 0.1, ptest = 0.1, out_resolution = "224x224") {
+copy_train_valid_test <- function(ptrain = 0.8, pvalid = 0.1, ptest = 0.1, out_resolution = "224x224!") {
   
   path <- "/media/eelke/Samsung_T5/salmon/data"
 
@@ -140,7 +140,7 @@ view_batch <- function(b) {
   images[images > 255] <- 255
   images[images < 0] <- 0
   
-  par(mfcol = c(6,4), mar = rep(1, 4))
+  par(mfcol = c(3,4), mar = rep(1, 4))
   
   images %>%
     purrr::array_tree(1) %>%
