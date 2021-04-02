@@ -76,13 +76,27 @@ for (i in label_layers$name) {
 # *********************************************************************************
 # *********************** 3. clip geotifs and export jpgs *************************
 # *********************************************************************************
+# very difficult layers
+lyr_poor <- c('salmon_20201021_PSCSal_12_Reach2-1_30m', 
+          'salmon_20201019_PSCSal_1_Reach1-0_30m', 
+          'salmon_20201002_30m', 
+          'salmon_20201019_PSCSal_5_Reach2-1_30m')
+
+# reasonable layers
+lyr_ok <- c('salmon_20201021_PSCSal_11_Reach2-1_30m', 
+        'salmon_20201022_PSCSal_3_Reach2-1_30m', 
+        ' salmon_20201002_PSCSal_2_Reach2-1_30m', 
+        'salmon_20201006_PSCSal_4_Reach2-1_30m', 
+        'salmon_20201007_PSCSal_7_Reach2-1_30m', 
+        'salmon_20201002_PSCSal_3_Reach2-1_30m')
 
 # subset layers for which to make a jpgs
 layers_subset <- st_layers("~/work/projects/salmon/data/labels.gpkg")[c(1,4)] %>%
   data.frame() %>%
-  filter(features > 50)
+  filter(features > 50 & name %in% lyr_ok) %>%
+  arrange(desc(features))
 
-map(layers_subset$name[1:5], func_imgprep)
+map(layers_subset$name[1:4], func_imgprep)
 #numb <- which(layers_subset == 'salmon_20201007_PSCSal_5_Reach2-1_10m-40')
 
 # *********************************************************************************
@@ -99,7 +113,7 @@ map(layers_subset$name[1:5], func_imgprep)
 all_jpgs  <- data.frame(filename = list.files("/media/eelke/Samsung_T5/salmon/data/consolidated", recursive = TRUE, full.names = TRUE)) %>%
   filter(!grepl('xml', filename) )
 
-func_meta <- function(x) {
+get_image_info <- function(x) {
   # extracts the metadata of an image based on filename
   cbind(x, image_info(image_read(x)) ) %>%
   dplyr::select('x', 'width', 'height') %>%
@@ -108,7 +122,7 @@ func_meta <- function(x) {
          id0 = str_split(filename, '.jpg', simplify = TRUE)[1])
   }
 
-images    <- map_df(all_jpgs[1:dim(all_jpgs)[1], ], func_meta)
+images    <- map_df(all_jpgs[1:dim(all_jpgs)[1], ], get_image_info)
 images$id <- as.integer(rownames(images))
 
 # 3. annotations: get image_id, bbox, category_id, id (image_id bbox category_id  id ignore)
@@ -181,32 +195,29 @@ func_get_bboxes <- function(r, bboxes) {
     # xleft, ytop, width, height
     dflist[[i]] <- as.integer(c(b_out[2,1], b_out[1,2], b_out[1,1]-b_out[2,1], b_out[3,2]-b_out[2,2]) )
     
-    # Xu <- unique(cds)[,1] %>%
-    #   sort() %>%
-    #   -extent(r)[1]
-    # 
-    # Yu <- unique(cds)[,2] %>%
-    #   sort() %>%
-    #   -extent(r)[3]
-    
-    # nx*Xu[1]/dx
-    # nx*Xu[1]/dx
-    
-    # dflist[[i]] <- as.integer(c(round(nx*Xu[1]/dx), round(ny*Yu[1]/dy), round(nx*Xu[3]/dx), round(ny*Yu[3]/dy) ) ) 
   }
   return(dflist)
 }
 
-func_get_annotations <- function(x) {
-    # read the clipped raster and return bbox
-    r      <- brick(x$filename)
-    bboxes <- st_read("~/work/projects/salmon/data/labels_bbox.gpkg", layer=x$layername) %>%
-      st_transform(crs(r)) %>%
-      st_crop(r)
+func_get_annotations <- function(jpg_id) {
     
+    cat(row.names(jpg_id), jpg_id$filename, '\n')
+    
+    r      <- brick(jpg_id$filename)
+    bb1    <- st_bbox(r)
+    pol    <- st_polygon(list(matrix(c(bb1$xmin, bb1$ymin, bb1$xmin, bb1$ymax, bb1$xmax, bb1$ymax, bb1$xmax, bb1$ymin, bb1$xmin, bb1$ymin), ncol=2, byrow=TRUE ) ) )
+    
+    bboxes <- st_read("~/work/projects/salmon/data/labels_bbox.gpkg", layer=jpg_id$layername) %>%
+      st_transform(crs(r)) %>%
+      cbind(st_centroid(.)) %>%
+      st_set_geometry("geom.1") %>% # set the points as the active geometry
+      mutate(int = apply(st_intersects(., pol, sparse = FALSE),1, any ) ) %>%
+      dplyr::filter(int) %>%
+      st_set_geometry("geom")
+
     bb <- func_get_bboxes(r=r, bboxes=bboxes) 
 
-  out <- data.frame("image_id" = x$image_id, "bbox" = I(bb), "category_id" = as.integer(1), n=dim(x)[1]) 
+  out <- data.frame("image_id" = jpg_id$image_id, "bbox" = I(bb), "category_id" = as.integer(1), n=dim(jpg_id)[1]) 
   return(out)
 }
 
@@ -220,10 +231,9 @@ annotations <- map_df(1:dim(jpgs_pos)[1], function(x) func_get_annotations(jpgs_
 
 str(annotations)
 
-categories  <- data.frame(supercategory = "none", id=as.integer(1), name="salmon")
+categories  <- data.frame(supercategory = "none", id=as.integer(1), name="s")
 
 train <- list(images=images[,c('file_name', 'height', 'width', 'id')], type="instances", annotations = annotations, categories=categories)
-
 
 str(train$images)
 str(train$type)
@@ -245,7 +255,7 @@ plot_img_bbox <- function(img) {
 }
 
 
-plot_img_bbox(img=jpgs_pos[1, ])
+plot_img_bbox(img=jpgs_pos[3, ])
 
 img <- image_read(jpgs_pos[1, ]$filename)
 

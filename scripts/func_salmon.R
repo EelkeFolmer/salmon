@@ -48,7 +48,7 @@ func_imgprep <- function(layer=layer, size=10) {
     dim_ok   <- (dim(or)[2]/dim(or)[1]>0.95 & dim(or)[2] > 224 & dim(or)[3] == 4) # check if the x and y dimensions are roughly the same and big enough
     img_ok   <- (dim_ok & !is_black & p_valid > 0.7)
       
-    if (has_salmon & dim_ok | img_ok) {
+    if (has_salmon & dim_ok & img_ok) {
       pathD   <- "/media/eelke/Samsung_T5/salmon/data/consolidated/"
       outname <- ifelse(has_salmon, paste0("pos/", layer, "_", i, "_T.jpg"), paste0("neg/", layer, "_", i, "_F.jpg") )
       sgdf    <- as(or, "SpatialGridDataFrame")
