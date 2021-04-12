@@ -15,10 +15,12 @@ library(pins)
 
 # function for preparation of the dataset
 #func_imgprep("salmon_20201021_PSCSal_11_Reach2-1_30m")
+#layer = 'salmon_20201007_PSCSal_7_Reach2-1_30m'
 
 func_imgprep <- function(layer=layer, size=10) {
   
   pathG  <- "/media/eelke/Samsung_T5/salmon/GIS/"
+  pathD  <- "/media/eelke/Samsung_T5/salmon/data/consolidated/"
   ortho  <- brick(paste0(pathG, layer, '.tif') ) 
   
   labels <- st_read("~/work/projects/salmon/data/salmon_labels.gpkg", layer=layer) %>%
@@ -49,13 +51,11 @@ func_imgprep <- function(layer=layer, size=10) {
     img_ok   <- (dim_ok & !is_black & p_valid > 0.7)
       
     if (has_salmon & dim_ok & img_ok) {
-      pathD   <- "/media/eelke/Samsung_T5/salmon/data/consolidated/"
       outname <- ifelse(has_salmon, paste0("pos/", layer, "_", i, "_T.jpg"), paste0("neg/", layer, "_", i, "_F.jpg") )
       sgdf    <- as(or, "SpatialGridDataFrame")
       rgdal::writeGDAL(sgdf, paste0(pathD, outname), drivername = "JPEG", type = "Byte", mvFlag = 255)
-      cat(i, '/', dim(grid)[1], 'has_salmon = ', has_salmon, '\n')
     }
-    
+    cat(i, '/', dim(grid)[1], 'has_salmon = ', has_salmon, '\n')
   }
   tmp_dir <- tempdir()
   files <- list.files(tmp_dir, full.names = T)

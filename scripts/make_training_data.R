@@ -96,26 +96,34 @@ for (i in label_layers2$name) {
 # *********************************************************************************
 # very difficult layers
 lyr_poor <- c('salmon_20201021_PSCSal_12_Reach2-1_30m', 
-          'salmon_20201019_PSCSal_1_Reach1-0_30m', 
-          'salmon_20201002_30m', 
-          'salmon_20201019_PSCSal_5_Reach2-1_30m')
+              'salmon_20201019_PSCSal_1_Reach1-0_30m', 
+              'salmon_20201002_30m', 
+              'salmon_20201019_PSCSal_5_Reach2-1_30m',
+              'salmon_20201026_PSCSal_6_Reach1-0_30m')
 
 # reasonable layers
 lyr_ok <- c('salmon_20201021_PSCSal_11_Reach2-1_30m', 
-        'salmon_20201022_PSCSal_3_Reach2-1_30m', 
-        ' salmon_20201002_PSCSal_2_Reach2-1_30m', 
-        'salmon_20201006_PSCSal_4_Reach2-1_30m', 
-        'salmon_20201007_PSCSal_7_Reach2-1_30m', 
-        'salmon_20201002_PSCSal_3_Reach2-1_30m')
+            'salmon_20201022_PSCSal_3_Reach2-1_30m', 
+            'salmon_20201002_PSCSal_2_Reach2-1_30m', 
+            'salmon_20201006_PSCSal_4_Reach2-1_30m', 
+            'salmon_20201007_PSCSal_7_Reach2-1_30m', 
+            'salmon_20201002_PSCSal_3_Reach2-1_30m',
+            'salmon_20201019_PSCSal_1_Reach1-0_30m',
+            'salmon_20201021_PSCSal_8_Reach2-1_30m',
+            'salmon_20201021_PSCSal_3_Reach1-0_30m',
+            'salmon_20201021_PSCSal_9_Reach2-1_30m',
+            'salmon_20201019_PSCSal_11_Reach2-1_30m')
 
 # subset layers for which to make a jpgs
 layers_subset <- st_layers("~/work/projects/salmon/data/labels_lines_bbox.gpkg")[c(1,4)] %>% # labels.gpkg
   data.frame() %>%
-  filter(features > 50 & name %in% lyr_ok) %>%
+  filter(features > 50 & name %in% lyr_ok) %>% # 
   arrange(desc(features))
 
-map(layers_subset$name[1:4], func_imgprep)
-#numb <- which(layers_subset == 'salmon_20201007_PSCSal_5_Reach2-1_10m-40')
+# lyr_ok %in% layers_subset$name
+
+map(layers_subset$name[7:11], func_imgprep)
+#numb <- which(layers_subset == 'salmon_20201007_PSCSal_7_Reach2-1_30m')
 
 # *********************************************************************************
 # ************************** 4. make json with labels *****************************
@@ -273,7 +281,7 @@ plot_img_bbox <- function(img) {
 }
 
 
-plot_img_bbox(img=jpgs_pos[105, ])
+plot_img_bbox(img=jpgs_pos[1, ])
 
 img <- image_read(jpgs_pos[1, ]$filename)
 
