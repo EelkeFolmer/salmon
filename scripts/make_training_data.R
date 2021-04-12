@@ -47,7 +47,7 @@ for (i in lys$name) {
 
 
 # *********************************************************************************
-# ************************** 2. make the bounding boxes ***************************
+# *********** 2. make the bounding boxes on the basis of the points ***************
 # *********************************************************************************
 
 st_bbox_by_feature = function(x) {
@@ -73,6 +73,24 @@ for (i in label_layers$name) {
   st_write(bbox, "~/work/projects/salmon/data/labels_bbox.gpkg", layer=i, delete_layer = TRUE)
 }
 
+
+# *********************************************************************************
+# *********** 3. make the bounding boxes on the basis of the lines  ***************
+# *********************************************************************************
+
+label_layers2 <- st_layers("~/work/projects/salmon/data/Labels_Lines_Completed.gpkg") [c(1,4)] %>%
+  data.frame() %>% 
+  arrange(features)
+
+for (i in label_layers2$name) {
+  st_read("~/work/projects/salmon/data/Labels_Lines_Completed.gpkg", layer=i) %>%
+    st_transform(crs=st_crs(32610)) %>% 
+    st_buffer(., dist = 0.05) %>% # if the line is vertical or horizontal, the bbox is too narrow, hence the buffer of 5 cm
+    st_bbox_by_feature(.) %>%
+    st_as_sf(., crs=st_crs(32610)) %>% 
+    st_write("~/work/projects/salmon/data/labels_lines_bbox.gpkg", layer=i, delete_layer = TRUE)
+}
+
 # *********************************************************************************
 # *********************** 3. clip geotifs and export jpgs *************************
 # *********************************************************************************
@@ -91,7 +109,7 @@ lyr_ok <- c('salmon_20201021_PSCSal_11_Reach2-1_30m',
         'salmon_20201002_PSCSal_3_Reach2-1_30m')
 
 # subset layers for which to make a jpgs
-layers_subset <- st_layers("~/work/projects/salmon/data/labels.gpkg")[c(1,4)] %>%
+layers_subset <- st_layers("~/work/projects/salmon/data/labels_lines_bbox.gpkg")[c(1,4)] %>% # labels.gpkg
   data.frame() %>%
   filter(features > 50 & name %in% lyr_ok) %>%
   arrange(desc(features))
@@ -207,7 +225,7 @@ func_get_annotations <- function(jpg_id) {
     bb1    <- st_bbox(r)
     pol    <- st_polygon(list(matrix(c(bb1$xmin, bb1$ymin, bb1$xmin, bb1$ymax, bb1$xmax, bb1$ymax, bb1$xmax, bb1$ymin, bb1$xmin, bb1$ymin), ncol=2, byrow=TRUE ) ) )
     
-    bboxes <- st_read("~/work/projects/salmon/data/labels_bbox.gpkg", layer=jpg_id$layername) %>%
+    bboxes <- st_read("~/work/projects/salmon/data/labels_lines_bbox.gpkg", layer=jpg_id$layername) %>% #labels_lines_bbox.gpkg
       st_transform(crs(r)) %>%
       cbind(st_centroid(.)) %>%
       st_set_geometry("geom.1") %>% # set the points as the active geometry
@@ -244,7 +262,7 @@ jsonlite::write_json(train, path="train.json")
 plot_img_bbox <- function(img) {
   r      <- brick(img$filename)
   
-  bboxes <- st_read("~/work/projects/salmon/data/labels_bbox.gpkg", layer=img$layername) %>%
+  bboxes <- st_read("~/work/projects/salmon/data/labels_lines_bbox.gpkg", layer=img$layername) %>%
     st_transform(crs(r)) %>%
     st_crop(r)
   
@@ -255,7 +273,7 @@ plot_img_bbox <- function(img) {
 }
 
 
-plot_img_bbox(img=jpgs_pos[3, ])
+plot_img_bbox(img=jpgs_pos[105, ])
 
 img <- image_read(jpgs_pos[1, ]$filename)
 
