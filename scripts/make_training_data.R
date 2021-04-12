@@ -255,7 +255,7 @@ annotations <- map_df(1:dim(jpgs_pos)[1], function(x) func_get_annotations(jpgs_
          ignore       = as.integer(0) ) %>%
   dplyr::select("segmentation", "area", "iscrowd", "image_id", "bbox", "category_id", "id", "ignore")
 
-str(annotations)
+#str(annotations)
 
 categories  <- data.frame(supercategory = "none", id=as.integer(1), name="s")
 
