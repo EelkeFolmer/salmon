@@ -281,7 +281,7 @@ plot_img_bbox <- function(img) {
 }
 
 
-plot_img_bbox(img=jpgs_pos[1, ])
+plot_img_bbox(img=jpgs_pos[2, ])
 
 img <- image_read(jpgs_pos[1, ]$filename)
 
