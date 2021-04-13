@@ -130,10 +130,10 @@ map(layers_subset$name[7:11], func_imgprep)
 # *********************************************************************************
 
 # make a list "train" to be exported at the end; "train" consists of 4 elements
-#     1. images (df with filename, height, width, id)
-#     2. type "instances"
-#     3. annotations (df with segments, bbox, etc.)
-#     4. categories  (df with id, name, supercategory)
+#  1. images (df with filename, height, width, id)
+#  2. type "instances"
+#  3. annotations (df with segments, bbox, etc.)
+#  4. categories  (df with id, name, supercategory)
 
 # 1. get filenames, id and extract width and height with imagemagick
 all_jpgs  <- data.frame(filename = list.files("/media/eelke/Samsung_T5/salmon/data/consolidated", recursive = TRUE, full.names = TRUE)) %>%
