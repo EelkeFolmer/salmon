@@ -122,7 +122,7 @@ layers_subset <- st_layers("~/work/projects/salmon/data/labels_lines_bbox.gpkg")
 
 # lyr_ok %in% layers_subset$name
 
-map(layers_subset$name[7:11], func_imgprep)
+map(layers_subset$name[4:10], func_imgprep)
 #numb <- which(layers_subset == 'salmon_20201007_PSCSal_7_Reach2-1_30m')
 
 # *********************************************************************************
@@ -136,7 +136,7 @@ map(layers_subset$name[7:11], func_imgprep)
 #  4. categories  (df with id, name, supercategory)
 
 # 1. get filenames, id and extract width and height with imagemagick
-all_jpgs  <- data.frame(filename = list.files("/media/eelke/Samsung_T5/salmon/data/consolidated", recursive = TRUE, full.names = TRUE)) %>%
+all_jpgs  <- data.frame(filename = list.files( "/media/eelke/Samsung_T5/salmon/data/consolidated/pos", recursive = TRUE, full.names = TRUE)) %>% #"/home/eelke/work/projects/salmon/R/data/train"
   filter(!grepl('xml', filename) )
 
 get_image_info <- function(x) {
@@ -157,30 +157,6 @@ jpgs_pos <- images %>%
   mutate(image_id = id, 
          image_id2 =  substr(filename, start=54, stop=nchar(filename)-6),
          layername = paste0(str_split(image_id2, "m_", simplify = TRUE )[,1], 'm') ) 
-
-func_get_bbox <- function(bbox) {
-  dflist <- list()
-  for (i in 1:dim(bbox)[1]) {
-    cds <- st_coordinates(bbox[[1]][i])
-    
-    Xu <- unique(cds)[,1] %>%
-      sort() %>%
-      -extent(r)[1]
-    
-    Yu <- unique(cds)[,2] %>%
-      sort() %>%
-      -extent(r)[3]
-    
-    dx <- extent(r)[2] - extent(r)[1]
-    dy <- extent(r)[4] - extent(r)[3]
-    nx <- nrow(r)
-    ny <- ncol(r)
-    
-    dflist[i] <- list(as.integer(c(round(nx*Xu[1]/dx), round(ny*Yu[2]/dy), round(nx*Xu[1]/dx), round(ny*Yu[2]/dy) ) ))
-  }
-  df <- do.call(rbind, dflist) 
-  return(dflist)
-}
 
 func_get_bboxes <- function(r, bboxes) {
   # bboxes is a layer in a geopackage with bboxes
@@ -255,8 +231,6 @@ annotations <- map_df(1:dim(jpgs_pos)[1], function(x) func_get_annotations(jpgs_
          ignore       = as.integer(0) ) %>%
   dplyr::select("segmentation", "area", "iscrowd", "image_id", "bbox", "category_id", "id", "ignore")
 
-#str(annotations)
-
 categories  <- data.frame(supercategory = "none", id=as.integer(1), name="s")
 
 train <- list(images=images[,c('file_name', 'height', 'width', 'id')], type="instances", annotations = annotations, categories=categories)
@@ -280,10 +254,13 @@ plot_img_bbox <- function(img) {
     scale_y_continuous(limits=extent(r)[3:4], expand = c(0,0)) + geom_sf(data=bboxes, fill=NA, col="blue")
 }
 
+'salmon_20201002_PSCSal_2_Reach2-1_30m_11_T.jpg'
+which(jpgs_pos$file_name == 'salmon_20201002_PSCSal_2_Reach2-1_30m_11_T.jpg')
+plot_img_bbox(img=jpgs_pos[1, ])
 
-plot_img_bbox(img=jpgs_pos[2, ])
+plot_img_bbox(img=jpgs_pos[5, ])
 
-img <- image_read(jpgs_pos[1, ]$filename)
+img <- image_read(jpgs_pos[5, ]$filename)
 
 print(img)
 image_contrast(img, sharpen = 100)

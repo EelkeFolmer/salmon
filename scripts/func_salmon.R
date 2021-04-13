@@ -168,3 +168,28 @@ view_batch <- function(b) {
 # 
 # df <- do.call(rbind, sizel)
 
+# func_get_bbox <- function(bbox) {
+#   dflist <- list()
+#   for (i in 1:dim(bbox)[1]) {
+#     cds <- st_coordinates(bbox[[1]][i])
+#     
+#     Xu <- unique(cds)[,1] %>%
+#       sort() %>%
+#       -extent(r)[1]
+#     
+#     Yu <- unique(cds)[,2] %>%
+#       sort() %>%
+#       -extent(r)[3]
+#     
+#     dx <- extent(r)[2] - extent(r)[1]
+#     dy <- extent(r)[4] - extent(r)[3]
+#     nx <- nrow(r)
+#     ny <- ncol(r)
+#     
+#     dflist[i] <- list(as.integer(c(round(nx*Xu[1]/dx), round(ny*Yu[2]/dy), round(nx*Xu[1]/dx), round(ny*Yu[2]/dy) ) ))
+#   }
+#   df <- do.call(rbind, dflist) 
+#   return(dflist)
+# }
+
+
